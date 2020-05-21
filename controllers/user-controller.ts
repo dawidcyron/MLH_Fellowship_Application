@@ -18,6 +18,7 @@ const createUser = async (req: Request, res: Response) => {
     return
   }
   user = await userService.createUser(user)
+  delete user.password
   res.send(user)
 }
 
@@ -50,5 +51,11 @@ const deleteUser = async (req: Request, res: Response) => {
   }
 }
 
+const getUser = (req: Request, res: Response) => {
+  let user = req.user as User
+  delete user.password
+  res.status(200).json(user)
+}
 
-export {createUser, loginUser, deleteUser}
+
+export {createUser, loginUser, deleteUser, getUser}

@@ -2,7 +2,7 @@ import * as express from 'express'
 import * as bodyParser from 'body-parser'
 import * as passport from 'passport'
 import { createConnection, useContainer } from 'typeorm'
-import { createUser, deleteUser, loginUser } from './controllers/user-controller'
+import { createUser, deleteUser, getUser, loginUser } from './controllers/user-controller'
 import { Container } from 'typedi'
 import UserService from './services/user-service'
 import { User } from './models/user'
@@ -42,6 +42,7 @@ createConnection().then(connection => {
   app.post('/user', createUser)
   app.post('/login', loginUser)
   app.delete('/user', passport.authenticate('jwt', {session: false, failWithError: true}), deleteUser)
+  app.get('/user', passport.authenticate('jwt', {session: false, failWithError: true}), getUser)
   app.use(handleError)
   app.listen(port, () => console.log('Server started at port 3000'))
 })
