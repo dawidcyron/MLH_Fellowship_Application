@@ -1,6 +1,10 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 import { IsEmail, IsInt, IsNotEmpty } from 'class-validator'
 
+export enum UserRole {
+  USER = 'user',
+  DOCTOR = 'doctor'
+}
 
 @Entity("users")
 export class User {
@@ -27,6 +31,13 @@ export class User {
   @Column()
   @IsInt()
   age: number
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER
+  })
+  role: UserRole
 
   static fromJson = (json) => {
     return Object.assign(new User(), json)
