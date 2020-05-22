@@ -1,12 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
-import { IsEmail, IsInt, IsNotEmpty } from 'class-validator'
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm'
+import { IsDate, IsEmail, IsInt, IsNotEmpty } from 'class-validator'
+import { Post } from './post'
+import { Expose, Type } from 'class-transformer'
+import { PostLike } from './post-like'
 
-export enum UserRole {
-  USER = 'user',
-  DOCTOR = 'doctor'
-}
-
-@Entity("users")
+@Entity('users')
+@Unique(['email'])
 export class User {
   @PrimaryGeneratedColumn()
   id: number
@@ -14,33 +13,35 @@ export class User {
   @Column()
   @IsEmail()
   @IsNotEmpty()
+  @Expose()
   email: string
 
-  @Column()
+  @Column({select: false})
   @IsNotEmpty()
+  @Expose()
   password: string
 
   @Column()
   @IsNotEmpty()
+  @Expose()
   first_name: string
 
   @Column()
   @IsNotEmpty()
+  @Expose()
   last_name: string
 
   @Column()
-  @IsInt()
-  age: number
+  @IsNotEmpty()
+  @Expose()
+  @IsDate()
+  @Type(() => Date)
+  birth_date: Date
 
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.USER
-  })
-  role: UserRole
+  @OneToMany(type => Post, post => post.author)
+  posts: Post[]
 
-  static fromJson = (json) => {
-    return Object.assign(new User(), json)
-  }
+  @OneToMany(type => PostLike, postLike => postLike.liked_by)
+  posts_liked: PostLike[]
 
 }

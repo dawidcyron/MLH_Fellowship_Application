@@ -6,6 +6,8 @@ import { FindOneOptions, ObjectID, Repository } from 'typeorm'
 import UserService from '../../../services/user-service'
 import * as bcrypt from 'bcrypt'
 import { Credentials } from '../../../models/credentials'
+import DateTimeFormat = Intl.DateTimeFormat
+import InvalidCredentialsError from '../../../errors/invalid-credentials-error'
 
 const expect = chai.expect
 
@@ -35,13 +37,17 @@ beforeEach(() => {
   user = new User()
   user.email = 'test@test.com'
   user.password = plainPassword
+  user.first_name = 'testName'
+  user.last_name = 'testLastName'
+  user.birth_date = new Date()
 })
 
 describe('UserService', () => {
   describe('createUser', () => {
-    it('Should create new user and return user object with id', async () => {
+    it('Should create new user and return user object with id and modified password', async () => {
       user = await userService.createUser(user)
       expect(user).to.not.be.undefined('User should be created')
+      expect(user.id).to.not.be.undefined('Created user should have an id')
       expect(user.password).to.not.equal(plainPassword, 'Password should be hashed using bcrypt')
       expect(await bcrypt.compare(plainPassword, user.password)).to.be.true('Hashed password should be a valid bcrypt hash')
     })
@@ -51,15 +57,21 @@ describe('UserService', () => {
       const credentials = new Credentials()
       credentials.email = user.email
       credentials.password = plainPassword
-      const areCredentialsCorrect = await userService.attemptLogin(credentials)
-      expect(areCredentialsCorrect).to.be.true('Credentials should match')
+      const loggedInUser = await userService.attemptLogin(credentials)
+      expect(loggedInUser).to.be.instanceOf(User)
     })
-    it('Should check users credentials and return false due to incorrect credentials', async () => {
+    it('Should check users credentials and throw InvalidCredentialsError', async () => {
       const credentials = new Credentials()
       credentials.email = user.email
       credentials.password = 'someRandomPassword'
-      const areCredentialsCorrect = await userService.attemptLogin(credentials)
-      expect(areCredentialsCorrect).to.not.be.true('Credentials should not match')
+      const message = new InvalidCredentialsError().message
+      expect( userService.attemptLogin(credentials)).to.eventually.be.rejectedWith(message)
+    })
+  })
+  describe('findUserById', () => {
+    it('Should return user without password', async () => {
+      user = await userService.findUserById(user.id)
+      expect(user.password).to.be.undefined('Password should not be sent to the user')
     })
   })
 })
